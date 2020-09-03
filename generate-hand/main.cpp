@@ -16,27 +16,19 @@ void generate_hand_model(const vector<Vector>& joints) {
 }
 
 
-void parseHand(HAND * hand, vector<Vector>& joints, vector<Quaternion>& rotations) {
+void parseHand(HAND * hand, vector<Vector>& joints) {
 	BONE arm = hand->arm;
 	FINGER fingers[5] = { hand->index, hand->middle,
 		hand->pinky, hand->ring, hand->thumb };
 
-	joints.push_back(EigenUtil::toVec(arm.prev_joint));
-	joints.push_back(EigenUtil::toVec(arm.prev_joint));//temp
+	joints.push_back(Vector(0, 0, 0, 0));
+	joints.push_back(Vector(0, 0, 0, 0));
 	joints.push_back(EigenUtil::toVec(arm.prev_joint));
 	joints.push_back(EigenUtil::toVec(arm.next_joint));
-
-	rotations.emplace_back(1, 0, 0, 0);
-	rotations.emplace_back(1, 0, 0, 0);
-	rotations.push_back(EigenUtil::toQuat(arm.rotation));
-	rotations.push_back(EigenUtil::toQuat(hand->palm.orientation));
-
-
 
 	for (auto & f : fingers) {
 		for (auto & b : f.bones) {
 			joints.push_back(EigenUtil::toVec(b.prev_joint));
-			rotations.push_back(EigenUtil::toQuat(b.rotation));
 		}
 	}
 
@@ -74,11 +66,9 @@ int main() {
 			if (no == 30)
 			{
 				vector<Vector> ori_joints = vector<Vector>();
-				vector<Quaternion> ori_rotations = vector<Quaternion>();
-				parseHand(hand, ori_joints, ori_rotations);
-				model.update(ori_joints, ori_rotations);
+				parseHand(hand, ori_joints);
+				model.update(ori_joints);
 				model.writeBack();
-				//generate_hand_model(hand);
 				break;
 			}
 		}

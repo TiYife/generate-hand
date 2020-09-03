@@ -29,7 +29,7 @@ void HandModel::init()
 }
 
 
-void HandModel::update(const vector<Vector>& joints, const vector<Quaternion>& rotations)
+void HandModel::update(const vector<Vector>& joints)
 {
 	int parent[kJointsNum + kFingersNum] = {
 		0, 0 ,1, 2,
@@ -58,15 +58,9 @@ void HandModel::update(const vector<Vector>& joints, const vector<Quaternion>& r
 	for (int i = 0; i < kJointsNum; i++) {
 		m_bodies_attach[i] = m_joints_attach[child[i]] / 2;
 		m_bodies_length[i] = m_joints_attach[child[i]].norm() - kTolerance;
-		
-		//Quaternion base = MathUtil::AxisAngleToQuaternion(Vector(1, 0, 0, 0), M_PI_2);
-		////Quaternion quat = rotations[i];
-		//Quaternion quat = MathUtil::QuatDiff(rotations[i], rotations[parent[i]]);
-		//quat = base * quat;
 
 		Quaternion quat = MathUtil::VecDiffQuat(Vector(0, 1, 0, 0), m_joints_attach[child[i]]);
 		quat.normalize();
-
 		m_bodies_attach_theta[i] = MathUtil::QuaternionToEuler(quat);
 
 	}

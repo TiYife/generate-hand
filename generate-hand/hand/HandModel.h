@@ -14,7 +14,7 @@ public:
 	~HandModel();
 
 	void init();
-	void update(const vector<Vector>& joints, const vector<Quaternion>& rotations);
+	void update(const vector<Vector>& joints);
 	void writeBack();
 
 
