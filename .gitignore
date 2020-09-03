@@ -1,0 +1,8 @@
+.vs/
+Debug/
+x64/
+.db
+.opendb
+generate-hand/x64
+generate-hand.VC.VC.opendb
+generate-hand.VC.db
