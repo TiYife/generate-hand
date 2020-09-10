@@ -19,11 +19,17 @@ void HandModel::init()
 	m_bodies_attach.clear();
 	m_bodies_attach_theta.clear();
 	m_bodies_length.clear();
+	m_joint_dims.clear();
+	m_base_rotation.clear();
+	m_base_relative_rotation.clear();
 
 	m_joints_attach.resize(kJointsNum + kFingersNum);
 	m_bodies_attach.resize(kJointsNum);
 	m_bodies_attach_theta.resize(kJointsNum);
 	m_bodies_length.resize(kJointsNum);
+	m_joint_dims.resize(kJointsNum);
+	m_base_rotation.resize(kJointsNum);
+	m_base_relative_rotation.resize(kJointsNum);
 
 	loadTempModel();
 }
@@ -60,9 +66,13 @@ void HandModel::update(const vector<Vector>& joints)
 		m_bodies_length[i] = m_joints_attach[child[i]].norm() - kTolerance;
 
 		Quaternion quat = MathUtil::VecDiffQuat(Vector(0, 1, 0, 0), m_joints_attach[child[i]]);
-		quat.normalize();
 		m_bodies_attach_theta[i] = MathUtil::QuaternionToEuler(quat);
 
+		Quaternion quat_parent = MathUtil::VecDiffQuat(Vector(0, 1, 0, 0), m_joints_attach[i]);
+		Quaternion quat_relative = MathUtil::QuatDiff(quat_parent, quat).normalized();
+		Quaternion quat_relative2 = MathUtil::VecDiffQuat(m_joints_attach[i], m_joints_attach[child[i]]).normalized();
+		m_base_rotation[i] = quat;
+		m_base_relative_rotation[i] = quat_relative;
 	}
 }
 
@@ -73,6 +83,9 @@ bool HandModel::loadTempModel()
 	Json::Reader reader;
 
 	succ = reader.parse(f_stream, m_json_root);
+
+	parseSkeleton(m_json_root["Skeleton"]);
+
 	f_stream.close();
 	return succ;
 }
@@ -100,6 +113,37 @@ void HandModel::writeBack()
 	}
 	
 	writeNewFile();
+}
+
+bool HandModel::parseSkeleton(Json::Value & root)
+{
+	Json::Value& joints = root["Joints"];
+	for (int i = 0; i < kJointsNum; i++) {
+		string joint_type = joints[i]["Type"].asString();
+		int dim = 0;
+
+		if (i == 0) {
+			dim = 7;
+		}
+		else if (joint_type == "fixed") {
+			dim = 0;
+		}
+		else if (joint_type == "spherical") {
+			dim = 4;
+		}
+		else if (joint_type == "revolute") {
+			dim = 1;
+		}
+		else {
+			return false;
+		}
+
+		m_joint_dims[i] = dim;
+		m_motion_dim += dim;
+
+	}
+
+	return true;
 }
 
 void HandModel::writeSkeleton(Json::Value& root)

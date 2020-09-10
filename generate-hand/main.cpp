@@ -1,7 +1,8 @@
 #include <iostream>
 #include "leapmotion/leapconnection.h"
 #include "util/FileUtil.h"
-#include "hand/HandModel.h"
+#include "hand/HandMotion.h"
+#include<windows.h>
 
 
 using namespace std;
@@ -23,6 +24,9 @@ void parseHand(HAND * hand, vector<Vector>& joints) {
 
 	joints.push_back(Vector(0, 0, 0, 0));
 	joints.push_back(Vector(0, 0, 0, 0));
+	//joints.push_back(EigenUtil::toVec(arm.prev_joint));
+	//joints.push_back(EigenUtil::toVec(arm.prev_joint));
+
 	joints.push_back(EigenUtil::toVec(arm.prev_joint));
 	joints.push_back(EigenUtil::toVec(arm.next_joint));
 
@@ -57,12 +61,11 @@ int main() {
 	FRAME *frame = GetFrame();
 	int no = 0;
 	while (frame) {
-		no++;
-		int frame_no = frame->tracking_frame_id;
-		std::cout << frame->tracking_frame_id << "/t";
 		LEAP_HAND* hand = &frame->pHands[0];
+		std::cout << hand->palm.position.x << "\t" << hand->palm.position.y << "\t" << hand->palm.position.z << "\n	";
+
 		if (hand) {
-			std::cout << hand->palm.position.x << "/t" << hand->palm.position.y << "/t" << hand->palm.position.z << "/n	";
+			no++;
 			if (no == 30)
 			{
 				vector<Vector> ori_joints = vector<Vector>();
@@ -73,6 +76,27 @@ int main() {
 			}
 		}
 	}
+
+	HandMotion motion(&model);
+	int pause = 0;
+	while (no < 100) {
+		LEAP_HAND* hand = &frame->pHands[0];
+		if (hand) {
+			no++;
+			if (no % 5 == 0)
+			{
+				vector<Vector> ori_joints = vector<Vector>();
+				parseHand(hand, ori_joints);
+				motion.addMotion(ori_joints);
+				cout << no << endl;
+			}
+		}
+		Sleep(10);
+	}
+
+	cin >> pause;
+
+	motion.writeMotion();
 	return 0;
 }
 
