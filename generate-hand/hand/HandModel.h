@@ -23,6 +23,7 @@ public:
 
 	void init();
 	void update(const vector<Vector>& joints);
+	void update(const vector<Vector>& joints, const vector<Quaternion> rotations);
 	void writeBack();
 
 private:

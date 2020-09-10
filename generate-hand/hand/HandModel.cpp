@@ -76,6 +76,53 @@ void HandModel::update(const vector<Vector>& joints)
 	}
 }
 
+void HandModel::update(const vector<Vector>& joints, const vector<Quaternion> rotations)
+{
+	int parent[kJointsNum + kFingersNum] = {
+		0, 0 ,1, 2,
+		3, 4, 5, 6,
+		3, 8, 9, 10,
+		3, 12, 13, 14,
+		3, 16, 17, 18,
+		3, 20, 21, 22,
+		7, 11, 15, 19, 23	//tips' parent joint
+	};
+
+	int child[kJointsNum + kFingersNum] = {
+		1, 2, 3, 0,		// 0 means zero attach dis
+		5, 6, 7, 24,
+		9, 10, 11, 25,
+		13, 14, 15, 26,
+		17, 18, 19, 27,
+		21, 22, 23, 28,
+		24, 25, 26, 27, 28	//tips' have no child
+	};
+
+	for (int i = 0; i < kJointsNum + kFingersNum; i++) {
+		m_joints_attach[i] = joints[i] - joints[parent[i]];
+	}
+
+	for (int i = 0; i < kJointsNum; i++) {
+		m_bodies_attach[i] = m_joints_attach[child[i]] / 2;
+		m_bodies_length[i] = m_joints_attach[child[i]].norm() - kTolerance;
+
+		Quaternion quat = MathUtil::VecDiffQuat(Vector(0, 1, 0, 0), m_joints_attach[child[i]]).normalized();
+		Quaternion base_quat = MathUtil::VecDiffQuat(Vector(0, 1, 0, 0), Vector(0,0,-1,0));
+		Quaternion new_quat =(rotations[i] * base_quat).normalized();
+		Vector v = MathUtil::QuatRotVec(rotations[i].inverse(), m_joints_attach[child[i]]).normalized();
+
+		m_bodies_attach_theta[i] = MathUtil::QuaternionToEuler(quat);
+		m_bodies_attach_theta[i] = MathUtil::QuaternionToEuler(new_quat);
+
+		std::cout << MathUtil::QuatToVec(quat).transpose() << "\t" << MathUtil::QuatToVec(rotations[i]).transpose() << "\n";
+		Quaternion quat_parent = MathUtil::VecDiffQuat(Vector(0, 1, 0, 0), m_joints_attach[i]);
+		Quaternion quat_relative = MathUtil::QuatDiff(quat_parent, quat).normalized();
+		Quaternion quat_relative2 = MathUtil::VecDiffQuat(m_joints_attach[i], m_joints_attach[child[i]]).normalized();
+		m_base_rotation[i] = quat;
+		m_base_relative_rotation[i] = quat_relative;
+	}
+}
+
 bool HandModel::loadTempModel()
 {
 	bool succ = true;

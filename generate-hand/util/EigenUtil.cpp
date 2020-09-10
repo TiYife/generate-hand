@@ -7,5 +7,5 @@ Vector EigenUtil::toVec(LEAP_VECTOR v)
 
 Quaternion EigenUtil::toQuat(LEAP_QUATERNION q)
 {
-	return Quaternion(q.w, q.x, q.y, q.z);
+	return Quaternion(q.w, q.x, q.y, q.z).normalized();
 }
