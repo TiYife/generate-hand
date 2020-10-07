@@ -9,6 +9,7 @@ public:
 
 	bool init();
 	bool addMotion(vector<Vector> joints);
+	bool addMotion(Vector root_pos, vector<Quaternion> rotations);
 	bool writeMotion();
 
 private:

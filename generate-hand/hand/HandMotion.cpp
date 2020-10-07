@@ -57,6 +57,7 @@ bool HandMotion::addMotion(vector<Vector> joints)
 
 		Quaternion quat_relative = MathUtil::QuatDiff(dir_parent, dir);
 		Quaternion quat_relative_base = m_rest_hand->m_base_relative_rotation[i];
+
 		Quaternion rotation = quat_relative;
 		//Quaternion rotation = MathUtil::QuatDiff(quat_relative, quat_relative_base);
 		//Quaternion rotation = MathUtil::QuatDiff(dir_virtual, dir);
@@ -101,6 +102,77 @@ bool HandMotion::addMotion(vector<Vector> joints)
 	return true;
 }
 
+
+
+bool HandMotion::addMotion(Vector root_pos, vector<Quaternion> rotations)
+{
+	vector<Vector> bone_direction = vector<Vector>(kJointsNum + kFingersNum);
+
+	int parent[kJointsNum + kFingersNum] = {
+		0, 0 ,1, 2,
+		3, 4, 5, 6,
+		3, 8, 9, 10,
+		3, 12, 13, 14,
+		3, 16, 17, 18,
+		3, 20, 21, 22,
+		7, 11, 15, 19, 23	//tips' parent joint
+	};
+
+	int child[kJointsNum + kFingersNum] = {
+		1, 2, 3, 0,		// 0 means zero attach dis
+		5, 6, 7, 24,
+		9, 10, 11, 25,
+		13, 14, 15, 26,
+		17, 18, 19, 27,
+		21, 22, 23, 28,
+		24, 25, 26, 27, 28	//tips' have no child
+	};
+
+
+	vector<double> motion = vector<double>();
+	for (int i = 0; i < kJointsNum; i++) {
+		Quaternion quat_ori = m_rest_hand->m_base_rotation[i];
+		Quaternion quat = rotations[i];
+		Quaternion quat_relative = MathUtil::QuatDiff(quat_ori, quat);
+		Quaternion rotation = quat_relative;
+		//Quaternion rotation = MathUtil::QuatDiff(quat_relative, quat_relative_base);
+		//Quaternion rotation = MathUtil::QuatDiff(dir_virtual, dir);
+		//Quaternion rotation = MathUtil::VecDiffQuat(bone_direction[i], bone_direction[child[i]]);
+		rotation.normalize();
+
+		if (m_rest_hand->m_joint_dims[i] == 7) {
+			motion.push_back(root_pos.x());
+			motion.push_back(root_pos.y());
+			motion.push_back(root_pos.z());
+
+			motion.push_back(rotation.w());
+			motion.push_back(rotation.x());
+			motion.push_back(rotation.y());
+			motion.push_back(rotation.z());
+		}
+		else if (m_rest_hand->m_joint_dims[i] == 4) {
+			motion.push_back(rotation.w());
+			motion.push_back(rotation.x());
+			motion.push_back(rotation.y());
+			motion.push_back(rotation.z());
+		}
+		else if (m_rest_hand->m_joint_dims[i] == 1) {
+			motion.push_back(MathUtil::QuaternionToEuler(rotation).z());
+		}
+
+		//m_base_rotation[i] = quat;
+		//m_bodies_attach_theta[i] = MathUtil::QuaternionToEuler(quat);
+	}
+
+	if (motion.size() != m_rest_hand->m_motion_dim) {
+		return false;
+	}
+
+	m_motion_list.push_back(motion);
+	return true;
+}
+
+
 bool HandMotion::writeMotion()
 {
 	Json::Value root;
@@ -109,7 +181,7 @@ bool HandMotion::writeMotion()
 	Json::Value frames;
 	for (auto & motion : m_motion_list) {
 		Json::Value json_frame;
-		json_frame.append(0.03);//todo 
+		json_frame.append(0.06);//todo 
 		for (auto d : motion) {
 			json_frame.append(d);
 		}

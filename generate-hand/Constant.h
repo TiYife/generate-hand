@@ -2,7 +2,7 @@
 #include <string>
 using namespace std;
 
-const string kTempModelFile = "D:/Documents/Visual Studio 2015/Projects/generate-hand/generate-hand/outputs/temp2.txt";
+const string kTempModelFile = "D:/Documents/Visual Studio 2015/Projects/generate-hand/generate-hand/outputs/temp.txt";
 const string kTempMotionFile = "";
 
 //const string kOutputDir = "D:/Documents/Visual Studio 2015/Projects/generate-hand/generate-hand/outputs/";

@@ -8,12 +8,13 @@
 
 using namespace std;
 
+
 using FRAME = LEAP_TRACKING_EVENT;
 using HAND = LEAP_HAND;
 using BONE = LEAP_BONE;
 using FINGER = LEAP_DIGIT;
 
-Vector root_relative_pos = Vector(0, -0.1, 0.4, 0);
+Vector root_relative_pos = Vector(0, -0, 400, 0);
 
 void generate_hand_model(const vector<Vector>& joints) {
 
@@ -55,18 +56,19 @@ void parseHand(HAND * hand, vector<Vector>& joints, vector<Quaternion>& rotation
 	FINGER fingers[5] = { hand->index, hand->middle,
 		hand->pinky, hand->ring, hand->thumb };
 
-	joints.push_back(Vector(0, 0, 0, 0));
-	joints.push_back(Vector(0, 0, 0, 0));
-	//joints.push_back(EigenUtil::toVec(arm.prev_joint) + root_relative_pos);
-	//joints.push_back(EigenUtil::toVec(arm.prev_joint) + root_relative_pos);
+	//joints.push_back(Vector(0, 0, 0, 0));
+	//joints.push_back(Vector(0, 0, 0, 0));
+	joints.push_back(EigenUtil::toVec(arm.prev_joint) + root_relative_pos);
+	joints.push_back(EigenUtil::toVec(arm.prev_joint) + root_relative_pos);
 
 	//joints.push_back(EigenUtil::toVec(arm.prev_joint));
 	//joints.push_back(EigenUtil::toVec(arm.prev_joint));
+
 	joints.push_back(EigenUtil::toVec(arm.prev_joint));
 	joints.push_back(EigenUtil::toVec(arm.next_joint));
 
-	Quaternion quat = MathUtil::VecDiffQuat(Vector(0, 0, -1, 0), EigenUtil::toVec(arm.prev_joint)/* + root_relative_pos*/);
 	rotations.emplace_back(1, 0, 0, 0);
+	Quaternion quat = MathUtil::VecDiffQuat(Vector(0, 0, -1, 0), root_relative_pos);
 	rotations.push_back(quat);
 	rotations.push_back(EigenUtil::toQuat(arm.rotation));
 	rotations.push_back(EigenUtil::toQuat(hand->palm.orientation));
@@ -106,8 +108,6 @@ int main() {
 	int no = 0;
 	while (frame) {
 		LEAP_HAND* hand = &frame->pHands[0];
-		std::cout << hand->palm.position.x << "\t" << hand->palm.position.y << "\t" << hand->palm.position.z << "\n	";
-
 		if (hand) {
 			no++;
 			if (no == 30)
@@ -118,31 +118,42 @@ int main() {
 				parseHand(hand, ori_joints, ori_rotations);
 				model.update(ori_joints, ori_rotations);
 				model.writeBack();
+
+
+
+				//HandMotion motion(&model);
+				//parseHand(hand, ori_joints, ori_rotations);
+				//motion.addMotion(ori_rotations);
+				//motion.addMotion(ori_rotations);
+				//motion.writeMotion();
+
 				break;
 			}
 		}
 	}
 
-	//HandMotion motion(&model);
+	no = 0;
+	HandMotion motion(&model);
 	int pause = 0;
-	//while (no < 100) {
-	//	LEAP_HAND* hand = &frame->pHands[0];
-	//	if (hand) {
-	//		no++;
-	//		if (no % 5 == 0)
-	//		{
-	//			vector<Vector> ori_joints = vector<Vector>();
-	//			parseHand(hand, ori_joints);
-	//			motion.addMotion(ori_joints);
-	//			cout << no << endl;
-	//		}
-	//	}
-	//	Sleep(10);
-	//}
+	while (no < 200) {
+		LEAP_HAND* hand = &frame->pHands[0];
+		if (hand) {
+			no++;
+			if (no % 5 == 0)
+			{
+				vector<Vector> ori_joints = vector<Vector>();
+				vector<Quaternion> ori_rotations = vector<Quaternion>();
+				parseHand(hand, ori_joints, ori_rotations);
+				motion.addMotion(Vector(0,1,1,0), ori_rotations);
+				cout << no << endl;
+			}
+		}
+		Sleep(10);
+	}
 
 	cin >> pause;
 
-	//motion.writeMotion();
+	motion.writeMotion();
 	return 0;
 }
 

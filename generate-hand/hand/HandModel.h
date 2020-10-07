@@ -3,6 +3,7 @@
 #include <vector>
 #include "util/EigenUtil.h"
 #include "util/JsonUtil.h"
+#include "util/MathUtil.h"
 #include "Constant.h"
 
 
@@ -33,6 +34,8 @@ private:
 	vector<double> m_bodies_length;
 
 	Json::Value m_json_root;
+
+	Quaternion m_base_quat = MathUtil::VecDiffQuat(Vector(0, 1, 0, 0), Vector(0, 0, -1, 0));
 
 
 

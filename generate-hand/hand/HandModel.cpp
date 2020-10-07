@@ -1,6 +1,5 @@
-#include "HandModel.h"
 #include <iostream>
-#include "util/MathUtil.h"
+#include "HandModel.h"
 
 HandModel::HandModel()	
 {
@@ -106,19 +105,13 @@ void HandModel::update(const vector<Vector>& joints, const vector<Quaternion> ro
 		m_bodies_attach[i] = m_joints_attach[child[i]] / 2;
 		m_bodies_length[i] = m_joints_attach[child[i]].norm() - kTolerance;
 
-		Quaternion quat = MathUtil::VecDiffQuat(Vector(0, 1, 0, 0), m_joints_attach[child[i]]).normalized();
-		Quaternion base_quat = MathUtil::VecDiffQuat(Vector(0, 1, 0, 0), Vector(0,0,-1,0));
-		Quaternion new_quat =(rotations[i] * base_quat).normalized();
-		Vector v = MathUtil::QuatRotVec(rotations[i].inverse(), m_joints_attach[child[i]]).normalized();
-
+		Quaternion quat =(rotations[i] * m_base_quat).normalized();
 		m_bodies_attach_theta[i] = MathUtil::QuaternionToEuler(quat);
-		m_bodies_attach_theta[i] = MathUtil::QuaternionToEuler(new_quat);
+		m_base_rotation[i] = rotations[i];
 
-		std::cout << MathUtil::QuatToVec(quat).transpose() << "\t" << MathUtil::QuatToVec(rotations[i]).transpose() << "\n";
 		Quaternion quat_parent = MathUtil::VecDiffQuat(Vector(0, 1, 0, 0), m_joints_attach[i]);
 		Quaternion quat_relative = MathUtil::QuatDiff(quat_parent, quat).normalized();
 		Quaternion quat_relative2 = MathUtil::VecDiffQuat(m_joints_attach[i], m_joints_attach[child[i]]).normalized();
-		m_base_rotation[i] = quat;
 		m_base_relative_rotation[i] = quat_relative;
 	}
 }
